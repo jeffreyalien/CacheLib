@@ -97,6 +97,7 @@ class Driver final : public AbstractCache {
   Status lookupAsync(BufferView key, LookupCallback cb) override;
 
   // remove the key from cache
+  // @param key  the item key to be removed
   // @return a status indicates success or failure, and the reason for failure
   Status remove(BufferView key) override;
 
@@ -126,6 +127,13 @@ class Driver final : public AbstractCache {
   // returns the navy stats
   void getCounters(const CounterVisitor& visitor) const override;
 
+  // This is a temporary API to update the maxWriteRate for
+  // DynamicRandomAdissionPolicy. The long term plan is to
+  // support online update to this and other cache configs.
+  // Returns true if update successfully
+  //         false if AdissionPolicy is not set or not DynamicRandom.
+  bool updateMaxRateForDynamicRandomAP(uint64_t maxRate) override;
+
  private:
   struct ValidConfigTag {};
 
@@ -138,7 +146,7 @@ class Driver final : public AbstractCache {
   //   - second: the other engine to remove key
   std::pair<Engine&, Engine&> select(BufferView key, BufferView value) const;
   void updateLookupStats(Status status) const;
-  Status removeHashedKey(HashedKey hk);
+  Status removeHashedKey(HashedKey hk, bool& skipSmallItemCache);
   bool admissionTest(HashedKey hk, BufferView value) const;
 
   const uint32_t smallItemMaxSize_{};

@@ -14,41 +14,24 @@
  * limitations under the License.
  */
 
-#include <folly/Random.h>
-#include <gtest/gtest.h>
-
-#include <thread>
-
-#include "cachelib/common/Time.h"
-
-using facebook::cachelib::util::Timer;
+#include "cachelib/allocator/tests/BaseAllocatorTestDeathStyle.h"
+#include "cachelib/allocator/tests/TestBase.h"
 
 namespace facebook {
 namespace cachelib {
 namespace tests {
+TYPED_TEST_CASE(BaseAllocatorTestDeathStyle, AllocatorTypes);
 
-TEST(Util, TimerTest) {
-  {
-    auto rnd = folly::Random::rand32(100, 2000);
-
-    Timer timer;
-    timer.startOrResume();
-    /* sleep override */
-    std::this_thread::sleep_for(std::chrono::milliseconds(rnd));
-    timer.pause();
-
-    ASSERT_EQ(timer.getDurationMs(), rnd);
-    ASSERT_EQ(timer.getDurationSec(), rnd / 1000);
-
-    {
-      auto t = timer.scopedStartOrResume();
-      /* sleep override */
-      std::this_thread::sleep_for(std::chrono::milliseconds(rnd));
-    }
-    ASSERT_EQ(timer.getDurationMs(), rnd * 2);
-  }
+TYPED_TEST(BaseAllocatorTestDeathStyle, ReadOnlyCacheView) {
+  this->testReadOnlyCacheView();
 }
-
 } // namespace tests
 } // namespace cachelib
 } // namespace facebook
+
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  // Use thread-safe mode for all tests that use ASSERT_DEATH
+  ::testing::GTEST_FLAG(death_test_style) = "threadsafe";
+  return RUN_ALL_TESTS();
+}
